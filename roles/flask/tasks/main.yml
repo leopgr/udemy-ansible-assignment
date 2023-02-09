@@ -1,0 +1,18 @@
+  - name: Install Flask
+    become: true
+    pip: name='{{ item }}' state=present executable=pip3
+    with_items:
+      - flask
+      - flask-mysql
+
+  - name: Copy source code
+    copy: src=app.py dest=/opt/app.py
+
+  - name: Print log
+    debug: msg="Starting web application"
+
+  - name: Start Web Server
+    shell: "export MYSQL_DATABASE_HOST={{ hostvars[groups['db_servers'][0]]['ansible_host'] }}; export FLASK_APP=/opt/app.py; nohup flask run --host=0.0.0.0 --port=80 &"
+
+  - name: Print log
+    debug: msg="Done!"

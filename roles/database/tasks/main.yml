@@ -1,0 +1,59 @@
+---
+    
+    - name: enable mysql8 repo
+      become: true
+      command: yum-config-manager --enable mysql80-community
+    
+    - name: disable mysql5.7 repo
+      become: true
+      command: yum-config-manager --disable mysql57-community
+
+    
+    - name: Install MySQL database
+      yum: name={{ item }} state=installed
+      with_items:
+        - mysql-community-server
+        - mysql-community-client
+
+    - name: Update MySQL Configuration file to accept connections from all interfaces
+      ini_file:
+        path: /etc/mysql/my.cnf
+        section: mysqld
+        option: bind-address
+        value: 0.0.0.0
+
+    - name: Start MySQL Service
+      service:
+        name: mysqld
+        state: started
+        enabled: yes
+          
+    - name: create /root/.my.cnf
+      copy:
+        dest: /root/.my.cnf
+        content: "[client]\nuser=root\npassword={{mysql_root_password}}"      
+
+    - name: Create Application Database
+      mysql_db: 
+        login_unix_socket: /var/lib/mysql/mysql.sock
+        name: '{{ db_name }}' 
+        state: present
+        login_user: root
+        login_password: "{{mysql_root_password}}"
+
+    - name: Cretae Database user
+      mysql_user:
+        login_user: root
+        login_password: "{{mysql_root_password}}"
+        name: '{{ db_user }}'
+        password: '{{ db_user_pwd }}'
+        priv: '*.*:ALL'
+        state: present
+        host: '%'
+
+  
+    - name: Re-start MySQL Service
+      service:
+        name: mysqld
+        state: restarted
+        enabled: yes

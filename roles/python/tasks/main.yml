@@ -1,0 +1,32 @@
+  - name: Install all required dependencies for Python
+    yum: name='{{item}}' state=latest
+    with_items:
+      - git
+      - epel-release
+      - python36
+      - python
+      - python2-pip
+      - mysql-connector-python
+      - python2-PyMySQL
+      - python-devel
+
+  - name: install python modules
+    become: true
+    pip: 
+      name: '{{ item }}'
+      state: latest
+      executable: pip
+    with_items:
+      - mysql-connector
+      - ez_setup 
+
+  - name: install python modules python3
+    become: true
+    pip: 
+      name: '{{ item }}'
+      state: latest
+      executable: pip3
+    with_items:
+      - mysql-connector
+      - ez_setup 
+
